@@ -350,18 +350,17 @@ int isBetweenEitherOrder(int x, int a, int b) {
  *   Max ops: 30
  *   Rating: 7
  */
-int mul5Sat(int x) {
+int mul5Sat(int x){
   /*先用左移和加法计算5x，再判断是否溢出；若溢出，根据x的符号返回最值，否则返回计算结果*/
   int fourx=x<<2;
   int result=fourx+x;
-  int ifflow_1=!!((fourx>>2)^x);
-  int ifflow_2=(!((fourx^x)>>31))&!!((result^fourx)>>31);
-  int ifflow=ifflow_1|ifflow_2;
+  int overflow1=!!((fourx>>2)^x);
+  int overflow2=(!((fourx^x)>>31))&!!((result^fourx)>>31);
+  int overflow=overflow1|overflow2;
   int sign=x>>31;
   int sat=(~sign&~(1<<31))|(sign&(1<<31));
-  return (ifflow&sat)|((~ifflow)&result);
+  return (overflow&sat)|((~overflow)&result);
 }
-
 // P14
 /* 
  * classifyAdd3 - classify the exact mathematical sum x+y+z.
