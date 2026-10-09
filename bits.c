@@ -394,10 +394,45 @@ int classifyAdd3(int x, int y, int z) {
  *   Max ops: 60
  *   Rating: 7
  */
-unsigned floatScaleThreeHalves(unsigned uf) {
-  return 15;
+unsigned floatScaleThreeHalves(unsigned uf){
+    unsigned sign=uf&0x80000000;
+    unsigned exp=(uf>>23)&0xFF;
+    unsigned frac=uf&0x7FFFFF;
+    if(exp==0xFF)
+        return uf;
+    if(exp==0){
+        unsigned p=frac*3;
+        unsigned q=p>>1;
+        if((p&1)&&(q&1))
+            q++;
+        return sign|q;
+    }
+    unsigned m=0x800000|frac;
+    unsigned p=m*3;
+    unsigned q;
+    unsigned rem;
+    unsigned half;
+    unsigned e=exp;
+    if(p&0x1000000){
+        q=p>>2;
+        rem=p&3;
+        half=2;
+        e++;
+    }else{
+        q=p>>1;
+        rem=p&1;
+        half=1;
+    }
+    if(rem>half||(rem==half&&(q&1)))
+        q++;
+    if(q&0x1000000){
+        q>>=1;
+        e++;
+    }
+    if(e>=0xFF)
+        return sign|0x7F800000;
+    return sign|(e<<23)|(q&0x7FFFFF);
 }
-
 // P16
 /* 
  * floatRoundEven - round the floating-point value represented by uf to the
