@@ -331,13 +331,14 @@ int midpointTowardFirst(int x, int y) {
  */
 
 int isBetweenEitherOrder(int x,int a,int b){
-    int smalla=(x+~a+1)>>31;
-    int smallb=(x+~b+1)>>31;
-    int smallab=(a+~b+1)>>31;
-    int xa=!(x^a);
-    int xb=!(x^b);
-    return ((!smalla&smallb)|(smalla&!smallb)|xa|xb)
-           & ((!smallab&!smalla)|(smallab&smalla)|xa|xb);
+    int sa=(x^a)>>31;
+    int sb=(x^b)>>31;
+    int da=x+~a+1;
+    int db=x+~b+1;
+    int na=(da>>31)^sa;
+    int nb=(db>>31)^sb;
+    int gea=(!(sa&!((x^a)>>31))&!na)|((sa&!((x^a)>>31))&na);
+    return 0;
 }
 
 // P13
@@ -569,6 +570,6 @@ int bitReverse(int x){
     x=((x>>2)&m2)|((x&m2)<<2);
     x=((x>>4)&m4)|((x&m4)<<4);
     x=((x>>8)&m8)|((x&m8)<<8);
-    x=((x>>16)&(0xFF<<8)|0xFF)|(x<<16);
+    x=((x>>16)&((0xFF<<8)|0xFF))|(x<<16);
     return x;
 }
