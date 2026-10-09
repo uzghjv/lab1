@@ -329,16 +329,20 @@ int midpointTowardFirst(int x, int y) {
  *   Max ops: 48
  *   Rating: 7
  */
-int isBetweenEitherOrder(int x, int a, int b) {
-  /*比较x与a、b的大小关系,然后判断是那种情况即可*/
-  int maskx=x>>31;
-  int maska=a>>31;
-  int maskb=b>>31;
-  int greatera=(!maskx&!!maska)|(!(maskx^maska)&!((x+~a)>>31));
-  int lessa=(!maska&!!maskx)|(!(maskx^maska)&!((a+~x)>>31));
-  int greaterb=(!maskx&!!maskb)|(!(maskx^maskb)&!((x+~b)>>31));
-  int lessb=(!maskb&!!maskx)|(!(maskx^maskb)&!((b+~x)>>31));
-  return (greatera&lessb)|(greaterb&lessa)|!(x^a)|!(x^b);
+
+int isBetweenEitherOrder(int x,int a,int b){
+  int sa=x>>31;
+  int sA=a>>31;
+  int sB=b>>31;
+  int xa=x+~a;
+  int xb=x+~b;
+  int ax=a+~x;
+  int bx=b+~x;
+  int gea=(!(sa^sA)&!((xa)>>31))|(!sa&sA);
+  int lea=(!(sa^sA)&!((ax)>>31))|(sa&!sA);
+  int geb=(!(sa^sB)&!((xb)>>31))|(!sa&sB);
+  int leb=(!(sa^sB)&!((bx)>>31))|(sa&!sB);
+  return (gea&leb)|(geb&lea)|!(x^a)|!(x^b);
 }
 
 // P13
