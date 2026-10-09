@@ -221,7 +221,7 @@ int swapNibblePairs(int x) {
   int mask=0x0F;
   mask=(mask<<8)|mask;
   mask=(mask<<16)|mask;
-  return ((x&mask)<<4)|((x&~mask)>>4);
+  return ((x&mask)<<4)|((((x&~mask)>>4))&mask);
 }
 
 // P7
@@ -256,7 +256,7 @@ int oddParity(int x) {
   x=x^(x>>4);
   x=x^(x>>2);
   x=x^(x>>1);
-  return ~(x&1);
+  return !(x&1);
 }
 
 // P9
@@ -272,7 +272,7 @@ int rotateRightBits(int x, int n) {
   /*先对n和31取与运算取模，再进行右移，左移需要把移出来的移到右边，相当于移动32-n位，并且考虑时算数右移还要考虑用mask去掉补上的符号位*/
   n=n&31;
   int mask=~((1<<31)>>n<<1);
-  int leftshift=32+~n+1;
+  int leftshift=(32+~n+1)&31;
   return (x>>n)&mask|(x<<leftshift)&~mask;
 }
 
@@ -355,7 +355,7 @@ int mul5Sat(int x) {
   int fourx=x<<2;
   int result=fourx+x;
   int ifflow_1=!!((fourx>>2)^x);
-  int ifflow_2=!(((fourx^x)>>31)&!!((result^x)>>31));
+  int ifflow_2=(!((fourx^x)>>31))&!!((result^x)>>31);
   int ifflow=ifflow_1|ifflow_2;
   int sign=x>>31;
   int sat=(~sign&~(1<<31))|(sign&(1<<31));
@@ -377,8 +377,8 @@ int classifyAdd3(int x, int y, int z) {
   int t=s+z;
   int sx=x>>31,sy=y>>31,ss=s>>31,sz=z>>31,st=t>>31;
   int p=(!(sx|sy)&!!ss)|(!(ss|sz)&!!st);
-  int n=(sx&sy&!ss)|(ss&sz&!st);
-  return (p&~n)|(~(n&~p)+1);
+  int n=!!((sx&sy&!ss)|(ss&sz&!st));
+  return p+(~n+1);
 }
 
 // P15
@@ -413,7 +413,7 @@ unsigned floatScaleThreeHalves(unsigned uf){
     unsigned rem;
     unsigned half;
     unsigned e=exp;
-    if(p&0x1000000){
+    if(p>=0x2000000){
         q=p>>2;
         rem=p&3;
         half=2;
