@@ -160,7 +160,7 @@ int signMask(void) {
  */
 int bitXor(int x, int y) {
   /*x与y的取反运算后进行与运算得到的1的位置为x为1的位置的二者不同位置，y与x的取反同理得到x为0的位置而与y不同的位置，二者取与运算，只有在x和y相同的位置1，然后取反得到异或*/
-	return ~(x&~y)&(~x&y);
+	return ~(~(x&~y)&~(~x&y));
 }
 
 // P3
@@ -218,7 +218,7 @@ int logicalShift(int x, int n) {
  */
 int swapNibblePairs(int x) {
   /*构造0x0F0F0F0F,取出每个字节的低四位，其取反就可以得到高四位，二者分别右移左移再取并，得到交换的结果*/
-  int mask=0xFF;
+  int mask=0x0F;
   mask=(mask<<8)|mask;
   mask=(mask<<16)|mask;
   return ((x&mask)<<4)|((x&~mask)>>4);
@@ -235,7 +235,7 @@ int swapNibblePairs(int x) {
  */
 int secondLowestZeroBit(int x) {
   /*取反x得到y，所有0的位置变为1，然后与y+~0进行与运算，得到第一个0的位置，再取反得到第二个0的位置*/
-  y=~x;
+  int y=~x;
   y=y&(y+~0);
   return y&(~y+1);
 }
@@ -354,12 +354,11 @@ int mul5Sat(int x) {
   /*先用左移和加法计算5x，再判断是否溢出；若溢出，根据x的符号返回最值，否则返回计算结果*/
   int fourx=x<<2;
   int result=fourx+x;
-  int maskx=x>>31;
   int ifflow_1=!!((fourx>>2)^x);
-  int ifflow_2=!!((fourx^x)>>31)&((result^x)>>31);
+  int ifflow_2=!(((fourx^x)>>31)&!!((result^x)>>31));
   int ifflow=ifflow_1|ifflow_2;
   int sign=x>>31;
-  int sat=(~sign&(1<<31))|(sign&~(1<<31));
+  int sat=(~sign&~(1<<31))|(sign&(1<<31));
   return (ifflow&sat)|((~ifflow)&result);
 }
 
@@ -373,7 +372,13 @@ int mul5Sat(int x) {
  *   Rating: 7
  */
 int classifyAdd3(int x, int y, int z) {
-  return 14;
+  /*分别判断两次加法的正溢出和负溢出，合并后返回1、-1或0*/
+  int s=x+y;
+  int t=s+z;
+  int sx=x>>31,sy=y>>31,ss=s>>31,sz=z>>31,st=t>>31;
+  int p=(!(sx|sy)&!!ss)|(!(ss|sz)&!!st);
+  int n=(sx&sy&!ss)|(ss&sz&!st);
+  return (p&~n)|(~(n&~p)+1);
 }
 
 // P15
