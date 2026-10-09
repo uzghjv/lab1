@@ -445,8 +445,37 @@ unsigned floatScaleThreeHalves(unsigned uf){
  *   Max ops: 65
  *   Rating: 10
  */
-unsigned floatRoundEven(unsigned uf) {
-  return 16;
+unsigned floatRoundEven(unsigned uf){
+    unsigned sign=uf&0x80000000;
+    unsigned exp=(uf>>23)&0xFF;
+    unsigned frac=uf&0x7FFFFF;
+    if(exp==0xFF)
+        return uf;
+    if(exp<126)
+        return sign;
+    if(exp==126){
+        if(frac==0)
+            return sign;
+        return sign|0x3F800000;
+    }
+    if(exp>=150)
+        return uf;
+    unsigned m=0x800000|frac;
+    unsigned k=150-exp;
+    unsigned n=m>>k;
+    unsigned rem=m&((1u<<k)+~0u);
+    unsigned half=1u<<(k-1);
+    if(rem>half||(rem==half&&(n&1)))
+        n++;
+    if(n==0)
+        return sign;
+    unsigned t=n;
+    unsigned e=0;
+    while(t>>1){
+        t>>=1;
+        e++;
+    }
+    return sign|((e+127)<<23)|((n<<(23-e))&0x7FFFFF);
 }
 
 // P17
@@ -459,8 +488,37 @@ unsigned floatRoundEven(unsigned uf) {
  *   Max ops: 40
  *   Rating: 10
  */
-unsigned float_i2f(int x) {
-  return 17;
+unsigned float_i2f(int x){
+    if(x==0)
+        return 0;
+    unsigned sign=0;
+    unsigned mag=x;
+    if(x<0){
+        sign=0x80000000;
+        mag=~mag+1;
+    }
+    unsigned t=mag;
+    unsigned e=0;
+    while(t>>1){
+        t>>=1;
+        e++;
+    }
+    unsigned sig;
+    if(e<=23)
+        sig=mag<<(23-e);
+    else{
+        unsigned k=e-23;
+        sig=mag>>k;
+        unsigned rem=mag&((1u<<k)+~0u);
+        unsigned half=1u<<(k-1);
+        if(rem>half||(rem==half&&(sig&1)))
+            sig++;
+        if(sig&0x1000000){
+            sig>>=1;
+            e++;
+        }
+    }
+    return sign|((e+127)<<23)|(sig&0x7FFFFF);
 }
 
 
@@ -473,10 +531,23 @@ unsigned float_i2f(int x) {
  *   Max ops: 40
  *   Rating: 10
  */
-int bitCount(int x) {
-  return 18;
+int bitCount(int x){
+    int m4=0x0F;
+    m4=(m4<<8)|m4;
+    m4=(m4<<16)|m4;
+    int m2=m4^(m4<<2);
+    int m1=m2^(m2<<1);
+    int m8=0xFF;
+    m8=(m8<<16)|m8;
+    int m16=0xFF;
+    m16=(m16<<8)|m16;
+    x=(x&m1)+((x>>1)&m1);
+    x=(x&m2)+((x>>2)&m2);
+    x=(x&m4)+((x>>4)&m4);
+    x=(x+(x>>8))&m8;
+    x=(x+(x>>16))&m16;
+    return x;
 }
-
 // P19
 /*
  * bitReverse - Reverse bits in an 32-bit integer
@@ -486,7 +557,18 @@ int bitCount(int x) {
  *   Max ops: 34
  *   Rating: 10
  */
-int bitReverse(int x)
-{
-  return 19;
+int bitReverse(int x){
+    int m4=0x0F;
+    m4=(m4<<8)|m4;
+    m4=(m4<<16)|m4;
+    int m2=m4^(m4<<2);
+    int m1=m2^(m2<<1);
+    int m8=0xFF;
+    m8=(m8<<16)|m8;
+    x=((x>>1)&m1)|((x&m1)<<1);
+    x=((x>>2)&m2)|((x&m2)<<2);
+    x=((x>>4)&m4)|((x&m4)<<4);
+    x=((x>>8)&m8)|((x&m8)<<8);
+    x=(x>>16)|(x<<16);
+    return x;
 }
