@@ -355,7 +355,7 @@ int mul5Sat(int x) {
   int fourx=x<<2;
   int result=fourx+x;
   int ifflow_1=!!((fourx>>2)^x);
-  int ifflow_2=(!((fourx^x)>>31))&!!((result^x)>>31);
+  int ifflow_2=(!((fourx^x)>>31))&!!((result^fourx)>>31);
   int ifflow=ifflow_1|ifflow_2;
   int sign=x>>31;
   int sat=(~sign&~(1<<31))|(sign&(1<<31));
