@@ -2,7 +2,7 @@
  * CS:APP Data Lab 
  * 
  * <Please put your name and userid here>
- * 
+ * 彭磊 25800190026
  * bits.c - Source file with your solutions to the Lab.
  *          This is the file you will hand in to your instructor.
  *
@@ -146,7 +146,8 @@ NOTES:
  *   Rating: 1
  */
 int signMask(void) {
-  return 1;
+  /*将1左移31位，得到符号位掩码，也就是32位整数的符号位*/
+  return 1<<31;
 }
 
 // P2
@@ -158,7 +159,8 @@ int signMask(void) {
  *   Rating: 2
  */
 int bitXor(int x, int y) {
-	return 2;
+  /*x与y的取反运算后进行与运算得到的1的位置为x为1的位置的二者不同位置，y与x的取反同理得到x为0的位置而与y不同的位置，二者取与运算，只有在x和y相同的位置1，然后取反得到异或*/
+	return ~(x&~y)&(~x&y);
 }
 
 // P3
@@ -170,7 +172,10 @@ int bitXor(int x, int y) {
  *   Rating: 3
  */
 int negativePart(int x){
-  return 3;
+  /*mask为符号位，-x与mask取与运算，若非负则neg为负，mask为0，返回0，否则neg为正，mask为0xFFFF，取与得到neg本身*/
+  int mask=x>>31;
+  int neg=~x+1;
+  return neg&mask;
 }
 
 
@@ -185,7 +190,8 @@ int negativePart(int x){
  *   Rating: 4
  */
 int copyByteWithin(int x, int src, int dst) {
-  return 4;
+  /*x左移src*8位，然后与0xFF进行与运算，得到src位置的字节，再左移dst*8位，与x&~(0xFF<<(dst<<3))进行或运算，得到结果*/
+  return ((x>>(src<<3))&0xFF)<<(dst<<3)|(x&~(0xFF<<(dst<<3)));
 }
 
 // P5
@@ -198,7 +204,8 @@ int copyByteWithin(int x, int src, int dst) {
  *   Rating: 4
  */
 int logicalShift(int x, int n) {
-  return 5;
+  /*~(((1<<31)>>n)<<1)为前n位都是0，后面都是1，与x>>n进行与运算使得前n位全为零，后面不变，实现逻辑右移*/
+  return (x>>n)&~(((1<<31)>>n)<<1);
 }
 
 // P6
@@ -210,7 +217,11 @@ int logicalShift(int x, int n) {
  *   Rating: 4
  */
 int swapNibblePairs(int x) {
-  return 6;
+  /*构造0x0F0F0F0F,取出每个字节的低四位，其取反就可以得到高四位，二者分别右移左移再取并，得到交换的结果*/
+  int mask=0xFF;
+  mask=(mask<<8)|mask;
+  mask=(mask<<16)|mask;
+  return ((x&mask)<<4)|((x&~mask)>>4);
 }
 
 // P7
@@ -223,7 +234,10 @@ int swapNibblePairs(int x) {
  *   Rating: 4
  */
 int secondLowestZeroBit(int x) {
-  return 7;
+  /*取反x得到y，所有0的位置变为1，然后与y+~0进行与运算，得到第一个0的位置，再取反得到第二个0的位置*/
+  y=~x;
+  y=y&(y+~0);
+  return y&(~y+1);
 }
 
 // P8
@@ -236,7 +250,13 @@ int secondLowestZeroBit(int x) {
  *   Rating: 5
  */
 int oddParity(int x) {
-  return 8;
+  /*多次取异或时只有当1的个数为奇数时结果为1，可以通过类似对折的想法来将x的全部位数进行异或，得到的最后的意味数就可以反映1的个数的奇偶*/
+  x=x^(x>>16);
+  x=x^(x>>8);
+  x=x^(x>>4);
+  x=x^(x>>2);
+  x=x^(x>>1);
+  return ~(x&1);
 }
 
 // P9
@@ -249,7 +269,11 @@ int oddParity(int x) {
  *   Rating: 5
  */
 int rotateRightBits(int x, int n) {
-  return 9;
+  /*先对n和31取与运算取模，再进行右移，左移需要把移出来的移到右边，相当于移动32-n位，并且考虑时算数右移还要考虑用mask去掉补上的符号位*/
+  n=n&31;
+  int mask=~((1<<31)>>n<<1);
+  int leftshift=32+~n+1;
+  return (x>>n)&mask|(x<<leftshift)&~mask;
 }
 
 // P10
@@ -264,7 +288,13 @@ int rotateRightBits(int x, int n) {
  *   Rating: 5
  */
 int roundEvenPow2(int x, int n) {
-  return 10;
+  /*将x除以2^n得到商和余数，根据余数的大小与商times的决定是否进位*/
+  int times=x>>n;
+  int remain=x&((1<<n)+~0);
+  int half=1<<(n+~0);
+  int lower=remain&(half+~0);
+  int inc=(remain>>(n+~0))&(!!lower|(times&1));
+  return (times+inc)<<n;
 }
 
 // P11
@@ -280,7 +310,13 @@ int roundEvenPow2(int x, int n) {
  *   Rating: 5
  */
 int midpointTowardFirst(int x, int y) {
-  return 11;
+  /*ave为x和y的平均值取整，然后通过greater判断x是否大于y，再通过异或判断x与y是否一奇一偶来决定是否进位*/
+  int ave=(x&y)+((x^y)>>1);
+  int maskx=x>>31;
+  int masky=y>>31;
+  int greater=(!maskx&!!masky)|(!(maskx^masky)&!((x+~y)>>31));
+  int inc=greater&((x^y)&1);
+  return ave+inc;
 }
 
 
@@ -294,7 +330,15 @@ int midpointTowardFirst(int x, int y) {
  *   Rating: 7
  */
 int isBetweenEitherOrder(int x, int a, int b) {
-  return 12;
+  /*比较x与a、b的大小关系,然后判断是那种情况即可*/
+  int maskx=x>>31;
+  int maska=a>>31;
+  int maskb=b>>31;
+  int greatera=(!maskx&!!maska)|(!(maskx^maska)&!((x+~a)>>31));
+  int lessa=(!maska&!!maskx)|(!(maskx^maska)&!((a+~x)>>31));
+  int greaterb=(!maskx&!!maskb)|(!(maskx^maskb)&!((x+~b)>>31));
+  int lessb=(!maskb&!!maskx)|(!(maskx^maskb)&!((b+~x)>>31));
+  return (greatera&lessb)|(greaterb&lessa)|!(x^a)|!(x^b);
 }
 
 // P13
@@ -307,7 +351,16 @@ int isBetweenEitherOrder(int x, int a, int b) {
  *   Rating: 7
  */
 int mul5Sat(int x) {
-  return 13;
+  /*先用左移和加法计算5x，再判断是否溢出；若溢出，根据x的符号返回最值，否则返回计算结果*/
+  int fourx=x<<2;
+  int result=fourx+x;
+  int maskx=x>>31;
+  int ifflow_1=!!((fourx>>2)^x);
+  int ifflow_2=!!((fourx^x)>>31)&((result^x)>>31);
+  int ifflow=ifflow_1|ifflow_2;
+  int sign=x>>31;
+  int sat=(~sign&(1<<31))|(sign&~(1<<31));
+  return (ifflow&sat)|((~ifflow)&result);
 }
 
 // P14
